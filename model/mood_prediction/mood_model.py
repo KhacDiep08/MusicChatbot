@@ -10,6 +10,21 @@ import torch
 import numpy as np
 
 
+class WeightedTrainer(Trainer):
+    def __init__(self, class_weights=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.class_weights = class_weights
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+        # Sử dụng loss có trọng số
+        loss_fct = torch.nn.CrossEntropyLoss(weight=self.class_weights.to(model.device))
+        loss = loss_fct(logits, labels)
+        return (loss, outputs) if return_outputs else loss
+
+
 class BuildModel:
     def __init__(
         self,
@@ -22,7 +37,8 @@ class BuildModel:
         weight_decay=0.01,
         logging_steps=50,
         save_steps=500,
-        eval_strategy='epoch'
+        eval_strategy='epoch',
+        class_weights=None  # Thêm trọng số lớp
     ):
         self.model_name = model_name
         self.num_labels = num_labels
@@ -30,6 +46,7 @@ class BuildModel:
         self.output_dir = output_dir
         self.batch_size = batch_size
         self.epochs = epochs
+        self.class_weights = class_weights
 
         # Tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -76,16 +93,29 @@ class BuildModel:
 
     def get_trainer(self, tokenized_datasets):
         """
-        Trả về HuggingFace Trainer.
-        tokenized_datasets: dict chứa 'train' và 'validation' (dataset đã token hóa).
+        Trả về HuggingFace Trainer có tích hợp trọng số lớp nếu có.
         """
-        trainer = Trainer(
-            model=self.model,
-            args=self.training_args,
-            train_dataset=tokenized_datasets['train'],
-            eval_dataset=tokenized_datasets['validation'],
-            tokenizer=self.tokenizer,
-            data_collator=self.collator,
-            compute_metrics=self.compute_metrics
-        )
+        if self.class_weights is not None:
+            # Nếu có trọng số lớp, dùng WeightedTrainer
+            trainer = WeightedTrainer(
+                model=self.model,
+                args=self.training_args,
+                train_dataset=tokenized_datasets['train'],
+                eval_dataset=tokenized_datasets['validation'],
+                tokenizer=self.tokenizer,
+                data_collator=self.collator,
+                compute_metrics=self.compute_metrics,
+                class_weights=self.class_weights
+            )
+        else:
+            # Nếu không có trọng số lớp, dùng Trainer mặc định
+            trainer = Trainer(
+                model=self.model,
+                args=self.training_args,
+                train_dataset=tokenized_datasets['train'],
+                eval_dataset=tokenized_datasets['validation'],
+                tokenizer=self.tokenizer,
+                data_collator=self.collator,
+                compute_metrics=self.compute_metrics
+            )
         return trainer
