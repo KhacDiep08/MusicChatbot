@@ -15,7 +15,7 @@ class BuildModel:
         self,
         model_name='distilbert-base-uncased',
         num_labels=4,
-        learning_rate=2e-5,
+        learning_rate=1e-5,
         output_dir='./results',
         batch_size=16,
         epochs=10,
@@ -54,6 +54,7 @@ class BuildModel:
             eval_strategy=eval_strategy,
             logging_steps=logging_steps,
             save_steps=save_steps,
+            warmup_ratio=0.1
             save_total_limit=2,
             load_best_model_at_end=True,
             metric_for_best_model='eval_f1',
