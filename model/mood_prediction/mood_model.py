@@ -18,7 +18,7 @@ class BuildModel:
         learning_rate=2e-5,
         output_dir='./results',
         batch_size=16,
-        epochs=5,
+        epochs=10,
         weight_decay=0.01,
         logging_steps=50,
         save_steps=500,
