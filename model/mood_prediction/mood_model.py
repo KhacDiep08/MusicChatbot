@@ -15,13 +15,14 @@ class WeightedTrainer(Trainer):
         super().__init__(*args, **kwargs)
         self.class_weights = class_weights
 
-    def compute_loss(self, model, inputs, return_outputs=False):
-        labels = inputs.get("labels")
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        labels = inputs.get("labels").long()  # đảm bảo đúng dtype
         outputs = model(**inputs)
         logits = outputs.get("logits")
-        # Sử dụng loss có trọng số
-        loss_fct = torch.nn.CrossEntropyLoss(weight=self.class_weights.to(model.device))
+        
+        loss_fct = torch.nn.CrossEntropyLoss(weight=self.class_weights.to(logits.device))
         loss = loss_fct(logits, labels)
+
         return (loss, outputs) if return_outputs else loss
 
 
