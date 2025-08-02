@@ -50,6 +50,7 @@ class BuildModel:
             per_device_eval_batch_size=batch_size,
             num_train_epochs=epochs,
             weight_decay=weight_decay,
+            save_strategy=eval_strategy,
             eval_strategy=eval_strategy,
             logging_steps=logging_steps,
             save_steps=save_steps,
