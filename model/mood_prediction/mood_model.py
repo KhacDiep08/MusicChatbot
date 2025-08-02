@@ -54,7 +54,7 @@ class BuildModel:
             eval_strategy=eval_strategy,
             logging_steps=logging_steps,
             save_steps=save_steps,
-            warmup_ratio=0.1
+            warmup_ratio=0.1,
             save_total_limit=2,
             load_best_model_at_end=True,
             metric_for_best_model='eval_f1',
