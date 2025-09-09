@@ -1,5 +1,4 @@
-# Bỏ qua thư mục build
-/build/
+
 
 # Bỏ qua file log
 *.log
