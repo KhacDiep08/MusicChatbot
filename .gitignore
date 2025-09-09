@@ -1,0 +1,11 @@
+# Bỏ qua thư mục build
+/build/
+
+# Bỏ qua file log
+*.log
+
+# Bỏ qua file cấu hình riêng
+config.local.json
+
+# Bỏ qua thư mục venv (Python)
+venv/
