@@ -9,7 +9,7 @@ class ReRankerEvaluator:
         self.eval_data = self.load_eval_data(eval_data_path)
         self.conv_manager = ConversationManager(rag_db_path=rag_db_path, use_rag=True)
         
-        # Load Re-Ranker model (hiệu năng cao)
+        # Load Re-Ranker model 
         self.reranker = CrossEncoder('BAAI/bge-reranker-large', max_length=512)
         
         print("✅ Re-Ranker model loaded successfully")
@@ -19,27 +19,18 @@ class ReRankerEvaluator:
             return json.load(f)
 
     def evaluate_with_reranker(self, actual_response, expected_answer):
-        """
-        Đánh giá chất lượng response bằng Re-Ranker
-        Trả về score từ 0-1, càng cao càng tốt
-        """
-        # Chuẩn bị cặp văn bản để đánh giá
+          
         pairs = [[actual_response, expected_answer]]
         
-        # Dùng Re-Ranker để tính điểm tương đồng
         scores = self.reranker.predict(pairs)
         
         return float(scores[0])
 
     def evaluate_retrieval_quality(self, question, expected_info):
-        """
-        Đánh giá chất lượng retrieval của RAG
-        """
         retrieved_results = self.conv_manager.rag.retrieve(question, top_k=5)
         
         retrieval_scores = []
         for result in retrieved_results:
-            # Đánh giá mức độ liên quan của từng kết quả retrieval
             doc_text = str(result['song_info'])
             relevance_score = self.evaluate_with_reranker(doc_text, expected_info)
             retrieval_scores.append(relevance_score)
@@ -56,13 +47,11 @@ class ReRankerEvaluator:
             response = self.conv_manager.generate_response(test_case['question'])
             response_time = time.time() - start_time
             
-            # Đánh giá chất lượng response với Re-Ranker
             reranker_score = self.evaluate_with_reranker(
                 response, 
                 test_case.get('expected_answer', test_case['question'])
             )
             
-            # Đánh giá chất lượng retrieval
             expected_info = f"{test_case.get('expected_artist', '')} {test_case.get('expected_title', '')}"
             retrieval_scores = self.evaluate_retrieval_quality(test_case['question'], expected_info)
             
