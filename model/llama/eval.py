@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from sentence_transformers import CrossEncoder
-from conversation import ConversationManager
+from rag import RAGRetriever
 import time
 
 class ReRankerEvaluator:
@@ -76,7 +76,7 @@ class ReRankerEvaluator:
         return results
 
     def calculate_metrics(self, results):
-        """Tính toán metrics tổng quan"""
+
         reranker_scores = [r['reranker_score'] for r in results]
         retrieval_scores = [r['max_retrieval_score'] for r in results]
         response_times = [r['response_time_'] for r in results]
@@ -91,7 +91,7 @@ class ReRankerEvaluator:
         }
 
     def analyze_failures(self, results):
-        """Phân tích các trường hợp thất bại"""
+
         failures = [r for r in results if r['reranker_score'] < 0.5]
         
         failure_analysis = {
@@ -102,4 +102,14 @@ class ReRankerEvaluator:
         }
         
         return failure_analysis
+
+    def run(self, eval_queries=None):
+        if eval_queries is None:
+            return self.run_comprehensive_evaluation()
+        results = []
+        for q in eval_queries:
+            resp = self.conv_manager.generate_response(q)
+            score = self.evaluate_with_reranker(resp, q)
+            results.append({"query": q, "response": resp, "score": score})
+        return results
 
