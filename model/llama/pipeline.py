@@ -14,9 +14,9 @@ from eval import ReRankerEvaluator
 @dataclass
 class PipelineConfig:
     # Paths
-    songs_db_path: str = "data/songs.json"
-    eval_data_path: str = "data/eval_data.json"
-    train_data_path: str = "data/train_data.json"
+    songs_db_path: str = "scripts/crawl/songs.json"
+    eval_data_path: str = "scripts/crawl/songs.json"
+    train_data_path: str = "scripts/crawl/songs.json"
     lora_output_dir: str = "adapters/music_assistant"
     conversation_dir: str = "conversations"
 
@@ -24,12 +24,12 @@ class PipelineConfig:
     model_name: str = "meta-llama/Llama-2-7b-chat-hf"
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     use_rag: bool = True
-    use_lora: bool = False
+    use_lora: bool = True
     use_4bit: bool = True
 
     # Generation
     max_new_tokens: int = 512
-    temperature: float = 0.7
+    temperature: float = 0.3
     top_p: float = 0.9
 
     # RAG
