@@ -29,15 +29,16 @@ class MusicChatbot:
             device=0 if self.device == "cuda" else -1,
         )
 
-    def build_prompt(self, user_input: str, context: str = None) -> str:
-        """Tạo prompt chuẩn cho model"""
-        system_prompt = "Bạn là một trợ lý âm nhạc hữu ích và thân thiện."
+    def build_prompt(self, user_input: str, context: str = None, max_songs: int = 5) -> str:
+        """Tạo prompt với validation"""
+    
+        system_prompt = f"""Trợ lý âm nhạc. Chỉ dùng dữ liệu được cung cấp. Gợi ý tối đa {max_songs} bài. Không bịa tên bài/nghệ sĩ."""
+    
         if context:
-            user_message = f"Dựa trên thông tin sau:\n{context}\n\nHãy trả lời: {user_input}"
+            user_message = f"DB: {context[:1000]}...\nQ: {user_input}\nA:"  # Truncate context nếu quá dài
         else:
-            user_message = user_input
+            user_message = f"Q: {user_input}\nA: Cần dữ liệu để trả lời chính xác."
 
-        # Prompt theo format của LLaMA
         return f"<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n{user_message} [/INST]"
 
     def generate_response(self, user_input: str, context: str = None,
