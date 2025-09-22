@@ -1,7 +1,7 @@
 import gradio as gr
 import json
 import time
-from pipeline import MusicChatbotPipeline, PipelineConfig
+from pipelinee import MusicChatbotPipeline, PipelineConfig
 
 class MusicChatbotGUI:
     def __init__(self, config: PipelineConfig = None):
