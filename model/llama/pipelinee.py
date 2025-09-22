@@ -113,7 +113,6 @@ class MusicChatbotPipeline:
         )
         self.model = MusicChatbot(
             model_name=self.config.model_name,
-            device=self.config.device,
             use_rag=self.config.use_rag
         )
         self.retriever = RAGRetriever(
