@@ -1,25 +1,46 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import BitsAndBytesConfig
 
 class MusicChatbot:
-    def __init__(self, model_name: str = "meta-llama/Llama-2-7b-chat-hf", device: str = None, use_rag=False):
+    def __init__(self, model_name: str = "meta-llama/Llama-2-7b-chat-hf", device: str = None, use_rag=False, use_int4=False):
         # Tự động chọn device nếu không set
         self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         self.use_rag = use_rag
-        print(f"Loading model '{model_name}' on device '{self.device}'...")
+        self.use_int4 = use_int4
+        print(f"Loading model '{model_name}' on device '{self.device}' {'with INT4' if use_int4 else ''}...")
 
         # Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
+        # INT4 Quantization config
+        quantization_config = None
+        if use_int4 and self.device == "cuda":
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4"
+            )
+
         # Load model
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-            device_map="auto" if self.device == "cuda" else None,
-            low_cpu_mem_usage=True,
-        )
+        model_kwargs = {
+            "low_cpu_mem_usage": True,
+        }
+        
+        if self.device == "cuda":
+            model_kwargs.update({
+                "torch_dtype": torch.float16,
+                "device_map": "auto"
+            })
+            if quantization_config:
+                model_kwargs["quantization_config"] = quantization_config
+        else:
+            model_kwargs["torch_dtype"] = torch.float32
+
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
 
         # Generator pipeline
         self.generator = pipeline(
