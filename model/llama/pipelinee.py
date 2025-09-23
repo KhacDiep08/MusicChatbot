@@ -38,11 +38,11 @@ class PipelineConfig:
     top_k_final: int = 3
 
     # LoRA
-    lora_r: int = 64
-    lora_alpha: int = 128
+    lora_r: int = 32
+    lora_alpha: int = 64
     lora_dropout: float = 0.05
     train_epochs: int = 3
-    train_batch_size: int = 2
+    train_batch_size: int = 1
     learning_rate: float = 2e-4
 
     # Conversation

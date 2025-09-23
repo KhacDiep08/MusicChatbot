@@ -13,8 +13,8 @@ from peft import get_peft_model, LoraConfig, prepare_model_for_kbit_training
 class LoraTrainer:
     def __init__(self,
                  base_model: str,
-                 r: int = 64,
-                 alpha: int = 128,
+                 r: int = 32,
+                 alpha: int = 53,
                  dropout: float = 0.05,
                  use_4bit: bool = True):
 
@@ -80,7 +80,7 @@ class LoraTrainer:
 
     def train(self, dataset_path: str, output_dir: str,
               epochs: int = 3,
-              batch_size: int = 2,
+              batch_size: int = 1,
               gradient_accumulation_steps: int = 4,
               lr: float = 2e-4):
 
