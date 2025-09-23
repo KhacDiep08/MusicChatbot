@@ -2,6 +2,7 @@ import json
 import numpy as np
 from sentence_transformers import CrossEncoder
 from rag import RAGRetriever
+from conversation import ConversationManager
 import time
 
 class ReRankerEvaluator:
