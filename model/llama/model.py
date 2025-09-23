@@ -3,7 +3,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from transformers import BitsAndBytesConfig
 
 class MusicChatbot:
-    def __init__(self, model_name: str = "meta-llama/Llama-2-7b-chat-hf", device: str = None, use_rag=False, use_int4=False):
+    def __init__(self, model_name: str = "meta-llama/Llama-2-7b-chat-hf", device: str = None, use_rag=True, use_int4=True):
         # Tự động chọn device nếu không set
         self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         self.use_rag = use_rag
