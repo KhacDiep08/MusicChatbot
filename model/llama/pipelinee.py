@@ -52,7 +52,6 @@ class PipelineConfig:
     verbose: bool = True
 
     def __post_init__(self):
-        # Auto create dirs
         for p in [self.songs_db_path, self.eval_data_path, self.train_data_path]:
             Path(p).parent.mkdir(parents=True, exist_ok=True)
         Path(self.lora_output_dir).parent.mkdir(parents=True, exist_ok=True)
@@ -106,23 +105,28 @@ class MusicChatbotPipeline:
         if self.config.verbose:
             print("🚀 Initializing components...")
 
+        self.model = MusicChatbot(
+            model_name=self.config.model_name,
+            use_rag=self.config.use_rag,
+            use_int4=self.config.use_4bit
+        )
+        
         self.conversation_manager = ConversationManager(
             rag_db_path=self.config.songs_db_path,
             use_rag=self.config.use_rag,
-            use_lora=self.config.use_lora
+            use_lora=self.config.use_lora,
+            chatbot_instance=self.model
         )
-        self.model = MusicChatbot(
-            model_name=self.config.model_name,
-            use_rag=self.config.use_rag
-        )
-        self.retriever = RAGRetriever(
-            db_path=self.config.songs_db_path,
-            embed_model=self.config.embedding_model
-        ) if self.config.use_rag else None
-        self.reranker = ReRankerEvaluator(
-            eval_data_path=self.config.eval_data_path,
-            rag_db_path=self.config.songs_db_path
-        ) if Path(self.config.eval_data_path).exists() else None
+        
+        self.retriever = self.conversation_manager.rag
+        
+        self.reranker = None
+        if Path(self.config.eval_data_path).exists():
+            self.reranker = ReRankerEvaluatorLight(
+                eval_data_path=self.config.eval_data_path,
+                conversation_manager=self.conversation_manager
+            )
+        
         self.lora_trainer = LoraTrainer(
             base_model=self.config.model_name,
             r=self.config.lora_r,
@@ -197,3 +201,34 @@ class MusicChatbotPipeline:
             json.dump(data, f, indent=2, ensure_ascii=False)
         print(f"💾 Conversation saved: {path}")
         return str(path)
+
+
+class ReRankerEvaluatorLight:
+    def __init__(self, eval_data_path, conversation_manager):
+        self.eval_data = self.load_eval_data(eval_data_path)
+        self.conv_manager = conversation_manager
+        from sentence_transformers import CrossEncoder
+        self.reranker = CrossEncoder('BAAI/bge-reranker-large', max_length=512)
+        print("✅ Re-Ranker model loaded successfully")
+
+    def load_eval_data(self, path):
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    def evaluate_with_reranker(self, actual_response, expected_answer):
+        pairs = [[actual_response, expected_answer]]
+        scores = self.reranker.predict(pairs)
+        return float(scores[0])
+
+    def run(self, eval_queries=None):
+        if eval_queries is None:
+            return self.run_comprehensive_evaluation()
+        results = []
+        for q in eval_queries:
+            resp = self.conv_manager.generate_response(q)
+            score = self.evaluate_with_reranker(resp, q)
+            results.append({"query": q, "response": resp, "score": score})
+        return results
+
+    def run_comprehensive_evaluation(self):
+        return []
