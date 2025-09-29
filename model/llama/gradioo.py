@@ -97,7 +97,6 @@ class MusicChatbotGUI:
                                 ["Ed Sheeran có những bài hát nào?"],
                                 ["Thể loại pop có gì hay?"],
                                 ["Gợi ý bài hát buồn"],
-                                ["Nhạc sĩ Trịnh Công Sơn viết những gì?"]
                             ],
                             inputs=msg,
                             label="💡 Câu hỏi mẫu"
