@@ -102,7 +102,7 @@ class LoraTrainer:
             remove_unused_columns=False,
             dataloader_pin_memory=False,
             gradient_checkpointing=True,
-            report_to="none"
+            report_to="tensorboard"
         )
 
         # Data collator để tự động padding
