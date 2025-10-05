@@ -14,7 +14,7 @@ class LoraTrainer:
     def __init__(self,
                  base_model: str,
                  r: int = 32,
-                 alpha: int = 53,
+                 alpha: int = 64,
                  dropout: float = 0.05,
                  use_4bit: bool = True):
 

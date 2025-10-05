@@ -16,7 +16,7 @@ class RAGRetriever:
     def build_faiss_index(self):
       
         self.docs = [
-            f"{song['title']} - {song['artist']} | {song['genre']} | {song['lyrics']}"
+            f"{song['title']} - {song['artist']} | {song['genre']} | {song['lyrics']} | {song['tags']}"
             for song in self.db
         ]
 
