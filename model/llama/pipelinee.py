@@ -52,15 +52,15 @@ class PipelineConfig:
     verbose: bool = True
 
     def __post_init__(self):
-        for p in [self.songs_db_path, self.eval_data_path, self.train_data_path]:
+        for p in [self.rag_db_path, self.eval_data_path, self.train_data_path]:
             Path(p).parent.mkdir(parents=True, exist_ok=True)
         Path(self.lora_output_dir).parent.mkdir(parents=True, exist_ok=True)
         Path(self.conversation_dir).mkdir(parents=True, exist_ok=True)
 
     def validate(self):
         errors = []
-        if self.use_rag and not Path(self.songs_db_path).exists():
-            errors.append(f"❌ Songs DB not found: {self.songs_db_path}")
+        if self.use_rag and not Path(self.rag_db_path).exists():
+            errors.append(f"❌ Songs DB not found: {self.rag_db_path}")
         if self.max_new_tokens <= 0:
             errors.append("❌ max_new_tokens phải > 0")
         if not (0 <= self.temperature <= 2):
@@ -112,7 +112,7 @@ class MusicChatbotPipeline:
         )
         
         self.conversation_manager = ConversationManager(
-            rag_db_path=self.config.songs_db_path,
+            rag_db_path=self.config.rag_db_path,
             use_rag=self.config.use_rag,
             use_lora=self.config.use_lora,
             chatbot_instance=self.model
