@@ -14,7 +14,7 @@ from eval import ReRankerEvaluator
 @dataclass
 class PipelineConfig:
     # Paths
-    songs_db_path: str = "scripts/crawl/songs.json"
+    rag_db_path: str = "scripts/crawl/songs.json"
     eval_data_path: str = "scripts/crawl/songs.json"
     train_data_path: str = "scripts/crawl/songs.json"
     lora_output_dir: str = "adapters/music_assistant"
