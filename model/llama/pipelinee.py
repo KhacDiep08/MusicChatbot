@@ -33,7 +33,7 @@ class PipelineConfig:
     top_p: float = 0.9
 
     # RAG
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_model: str = "BAAI/bge-m3"
     top_k_retrieval: int = 5
     top_k_final: int = 3
 

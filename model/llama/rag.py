@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 
 
 class RAGRetriever:
-    def __init__(self, rag_db_path: str, embed_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, rag_db_path: str, embed_model: str = "BAAI/bge-m3"):
         with open(rag_db_path, 'r', encoding="utf-8") as f:
             self.db = json.load(f)
 
