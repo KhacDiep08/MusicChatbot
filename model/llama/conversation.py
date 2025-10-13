@@ -24,9 +24,9 @@ class ConversationManager:
             from peft import PeftModel
             print(f"Loading LoRA adapter from {adapter_path}...")
             self.chatbot.model = PeftModel.from_pretrained(self.chatbot.model, adapter_path)
-            print("✅ LoRA adapter loaded successfully")
+            print(" LoRA adapter loaded successfully")
         except Exception as e:
-            print(f"❌ Failed to load LoRA adapter: {e}")
+            print(f" Failed to load LoRA adapter: {e}")
             self.use_lora = False
 
     def generate_response(self, user_input: str, **gen_params):

@@ -10,7 +10,7 @@ class MusicChatbotGUI:
                 
     def chat_response(self, message, history, use_rag, temperature, max_tokens):
         if not message.strip():
-            return history, history, "⚠️ Vui lòng nhập câu hỏi!"
+            return history, history, " Vui lòng nhập câu hỏi!"
         
         start_time = time.time()
         try:
@@ -26,18 +26,18 @@ class MusicChatbotGUI:
                 )
                 response_time = time.time() - start_time
                 history.append([message, response])
-                status = f"✅ Đã trả lời trong {response_time:.2f}s | RAG: {'Bật' if use_rag else 'Tắt'}"
+                status = f" Đã trả lời trong {response_time:.2f}s | RAG: {'Bật' if use_rag else 'Tắt'}"
                 return history, history, status
             finally:
                 self.pipeline.conversation_manager.rag = original_rag_state
         except Exception as e:
-            error_msg = f"❌ Lỗi: {str(e)}"
+            error_msg = f" Lỗi: {str(e)}"
             history.append([message, f"Xin lỗi, đã xảy ra lỗi: {str(e)}"])
             return history, history, error_msg
 
     def clear_conversation(self):
         self.pipeline.conversation_manager.clear_history()
-        return [], [], "🔄 Đã xóa lịch sử hội thoại"
+        return [], [], " Đã xóa lịch sử hội thoại"
 
     def get_stats(self):
         stats = self.pipeline.get_stats()
@@ -82,13 +82,13 @@ class MusicChatbotGUI:
             
             with gr.Row():
                 with gr.Column(scale=2):
-                    chatbot = gr.Chatbot(height=500, label="🤖 Cuộc trò chuyện", bubble_full_width=False)
+                    chatbot = gr.Chatbot(height=500, label=" Cuộc trò chuyện", bubble_full_width=False)
                     with gr.Row():
                         msg = gr.Textbox(
                             placeholder="Hỏi gì đó về âm nhạc... (VD: 'Ed Sheeran có những bài hát nào?')",
                             label="Tin nhắn", lines=2, scale=4
                         )
-                        send_btn = gr.Button("📤 Gửi", variant="primary", scale=1)
+                        send_btn = gr.Button(" Gửi", variant="primary", scale=1)
                     
                     with gr.Row():
                         gr.Examples(
@@ -109,14 +109,14 @@ class MusicChatbotGUI:
                     max_tokens = gr.Slider(minimum=128, maximum=1024, value=512, step=128, label="📝 Max Tokens")
                     
                     gr.Markdown("### 🛠️ Hành động")
-                    clear_btn = gr.Button("🗑️ Xóa lịch sử", variant="secondary")
-                    export_btn = gr.Button("💾 Xuất cuộc trò chuyện")
+                    clear_btn = gr.Button(" Xóa lịch sử", variant="secondary")
+                    export_btn = gr.Button(" Xuất cuộc trò chuyện")
                     
-                    gr.Markdown("### 📊 Thống kê")
+                    gr.Markdown("###  Thống kê")
                     stats_display = gr.Markdown(self.get_stats())
-                    refresh_stats_btn = gr.Button("🔄 Cập nhật thống kê")
+                    refresh_stats_btn = gr.Button(" Cập nhật thống kê")
             
-            status = gr.Textbox(label="Trạng thái", interactive=False, value="✅ Sẵn sàng chat!")
+            status = gr.Textbox(label="Trạng thái", interactive=False, value=" Sẵn sàng chat!")
             history_state = gr.State([])
             
             def respond(message, history, use_rag, temperature, max_tokens):

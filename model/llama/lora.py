@@ -95,7 +95,7 @@ class LoraTrainer:
             fp16=not self.use_4bit,
             logging_steps=10,
             save_strategy="epoch",
-            evaluation_strategy="no",
+            evaluation_strategy="epoch",
             output_dir=output_dir,
             save_total_limit=2,
             optim="paged_adamw_8bit" if self.use_4bit else "adamw_torch",
@@ -123,7 +123,7 @@ class LoraTrainer:
         trainer.train()
         self.model.save_pretrained(output_dir)
         self.tokenizer.save_pretrained(output_dir)
-        print(f"✅ LoRA adapter saved to {output_dir}")
+        print(f" LoRA adapter saved to {output_dir}")
 
 
 
