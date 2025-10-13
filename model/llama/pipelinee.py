@@ -60,24 +60,24 @@ class PipelineConfig:
     def validate(self):
         errors = []
         if self.use_rag and not Path(self.rag_db_path).exists():
-            errors.append(f"❌ Songs DB not found: {self.rag_db_path}")
+            errors.append(f" Songs DB not found: {self.rag_db_path}")
         if self.max_new_tokens <= 0:
-            errors.append("❌ max_new_tokens phải > 0")
+            errors.append(" max_new_tokens phải > 0")
         if not (0 <= self.temperature <= 2):
-            errors.append("❌ temperature phải trong khoảng [0, 2]")
+            errors.append(" temperature phải trong khoảng [0, 2]")
         if self.top_k_final > self.top_k_retrieval:
-            errors.append("❌ top_k_final không thể > top_k_retrieval")
+            errors.append(" top_k_final không thể > top_k_retrieval")
 
         if errors:
             for e in errors: print(e)
             return False
-        if self.verbose: print("✅ Config validation passed")
+        if self.verbose: print(" Config validation passed")
         return True
 
     def save(self, path="pipeline_config.json"):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(asdict(self), f, indent=2, ensure_ascii=False)
-        print(f"✅ Config saved to {path}")
+        print(f" Config saved to {path}")
 
     @classmethod
     def load(cls, path="pipeline_config.json"):
@@ -85,10 +85,10 @@ class PipelineConfig:
             with open(path, "r", encoding="utf-8") as f:
                 return cls(**json.load(f))
         except FileNotFoundError:
-            print(f"⚠️ Config file {path} not found. Using default config.")
+            print(f" Config file {path} not found. Using default config.")
             return cls()
         except Exception as e:
-            print(f"❌ Error loading config: {e}. Using default config.")
+            print(f" Error loading config: {e}. Using default config.")
             return cls()
 
 
@@ -96,14 +96,14 @@ class MusicChatbotPipeline:
     def __init__(self, config: PipelineConfig = None):
         self.config = config or PipelineConfig()
         if not self.config.validate():
-            raise ValueError("❌ Invalid configuration")
+            raise ValueError(" Invalid configuration")
 
         self.stats = {"total_queries": 0, "total_response_time": 0.0, "conversation_turns": 0}
         self._init_components()
 
     def _init_components(self):
         if self.config.verbose:
-            print("🚀 Initializing components...")
+            print(" Initializing components...")
 
         self.model = MusicChatbot(
             model_name=self.config.model_name,
@@ -136,7 +136,7 @@ class MusicChatbotPipeline:
         ) if self.config.use_lora else None
 
         if self.config.verbose:
-            print("✅ Components ready!")
+            print(" Components ready!")
 
     def chat(self, query: str, **override_params):
         start = time.time()
@@ -160,13 +160,13 @@ class MusicChatbotPipeline:
 
     def evaluate(self, eval_queries=None):
         if not self.reranker:
-            print("⚠️ No evaluator available")
+            print(" No evaluator available")
             return None
         return self.reranker.run(eval_queries)
 
     def train_lora(self):
         if not self.lora_trainer:
-            print("⚠️ LoRA not enabled")
+            print(" LoRA not enabled")
             return False
         try:
             self.lora_trainer.train(
@@ -176,10 +176,10 @@ class MusicChatbotPipeline:
                 batch_size=self.config.train_batch_size,
                 lr=self.config.learning_rate,
             )
-            print("✅ LoRA training done!")
+            print(" LoRA training done!")
             return True
         except Exception as e:
-            print(f"❌ LoRA training failed: {e}")
+            print(f" LoRA training failed: {e}")
             return False
 
     def _update_stats(self, response_time: float):
@@ -199,7 +199,7 @@ class MusicChatbotPipeline:
                 "history": self.conversation_manager.conversation_history}
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f"💾 Conversation saved: {path}")
+        print(f" Conversation saved: {path}")
         return str(path)
 
 
@@ -209,7 +209,7 @@ class ReRankerEvaluatorLight:
         self.conv_manager = conversation_manager
         from sentence_transformers import CrossEncoder
         self.reranker = CrossEncoder('BAAI/bge-reranker-large', max_length=512)
-        print("✅ Re-Ranker model loaded successfully")
+        print(" Re-Ranker model loaded successfully")
 
     def load_eval_data(self, path):
         with open(path, 'r', encoding='utf-8') as f:
