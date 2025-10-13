@@ -1,20 +1,9 @@
 import torch
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    pipeline,
-    BitsAndBytesConfig,
-)
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
 
 
 class MusicChatbot:
-    def __init__(
-        self,
-        model_name: str = "meta-llama/Llama-2-7b-chat-hf",
-        device: str = None,
-        use_rag=True,
-        use_int4=True,
-    ):
+    def __init__(self, model_name="meta-llama/Llama-2-7b-chat-hf", device=None, use_rag=True, use_int4=True):
         self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         self.use_rag = use_rag
         self.use_int4 = use_int4
@@ -24,12 +13,10 @@ class MusicChatbot:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        # Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
-        # Cấu hình lượng tử hóa (quantization)
         quantization_config = None
         if use_int4 and self.device == "cuda":
             quantization_config = BitsAndBytesConfig(
@@ -50,7 +37,6 @@ class MusicChatbot:
         else:
             model_kwargs["torch_dtype"] = torch.float32
 
-        # Load model
         try:
             print("Attempting to load model with 4-bit quantization...")
             self.model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
@@ -59,14 +45,12 @@ class MusicChatbot:
             if "dispatched on the CPU or the disk" in str(e):
                 print("GPU memory insufficient, trying balanced device map...")
                 model_kwargs["device_map"] = "balanced_low_0"
-
                 try:
                     self.model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
                     print("Model loaded with balanced_low_0 device map.")
                 except Exception:
                     print("Trying sequential device map...")
                     model_kwargs["device_map"] = "sequential"
-
                     try:
                         self.model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
                         print("Model loaded with sequential device map.")
@@ -82,7 +66,6 @@ class MusicChatbot:
 
         self.model.eval()
 
-        # Pipeline sinh văn bản
         self.generator = pipeline(
             "text-generation",
             model=self.model,
@@ -95,57 +78,62 @@ class MusicChatbot:
             reserved = torch.cuda.memory_reserved() / 1e9
             print(f"GPU Memory: {allocated:.2f} GB allocated, {reserved:.2f} GB reserved")
 
-    def build_prompt(self, user_input: str, context: str = None, max_songs: int = 5) -> str:
-        """
-        Xây dựng prompt đầu vào cho mô hình, sử dụng few-shot learning.
-        """
-        system_prompt = f"Bạn là một Trợ lý Âm nhạc. Hãy làm theo các ví dụ một cách cẩn thận. Gợi ý tối đa {max_songs} bài."
+    def build_prompt_english(self, user_input: str, context: str = None, max_songs: int = 5) -> str:
+        system_prompt = f"""You are a music information retrieval system, NOT a creative conversational assistant.
+
+**ULTIMATE RULES YOU MUST FOLLOW:**
+1. **ABSOLUTELY ONLY** use information from the "### Provided Data ###" section.
+2. **NEVER** use your internal, pre-existing knowledge.
+3. **NEVER** invent song titles or artists that are not in the provided data.
+4. If the provided data is insufficient to fulfill the request, provide what you can and explicitly state that the information is incomplete.
+5. Suggest a maximum of {max_songs} songs.
+6. Always follow the format and style of the provided examples.
+"""
 
         examples = """
-### Ví dụ 1: Tìm kiếm thành công ###
-[INST] ### Dữ liệu Cung cấp ###
+### Example 1: Successful Search ###
+[INST] ### Provided Data ###
 - Taylor Swift - Love Story
 - Taylor Swift - Blank Space
 - Lady Gaga - Bad Romance
-### Yêu cầu của người dùng ###
-Gợi ý vài bài hát của Taylor Swift
+### User Request ###
+Suggest some songs by Taylor Swift
 A: [/INST]
 - Love Story
 - Blank Space
 </s>
-<s>[INST] ### Ví dụ 2: Không tìm thấy nghệ sĩ ###
-### Dữ liệu Cung cấp ###
+<s>[INST] ### Example 2: Artist Not Found ###
+### Provided Data ###
 - Taylor Swift - Love Story
 - Taylor Swift - Blank Space
-### Yêu cầu của người dùng ###
-Tìm giúp tôi bài hát của Adele
+### User Request ###
+Find a song by Adele for me
 A: [/INST]
-Xin lỗi, trong dữ liệu được cung cấp, tôi không tìm thấy bài hát nào của nghệ sĩ Adele.
+I'm sorry, but I could not find any songs by the artist Adele in the provided data.
 </s>
-<s>[INST] ### Ví dụ 3: Không có dữ liệu ###
-### Dữ liệu Cung cấp ###
-(Không có dữ liệu nào được cung cấp)
-### Yêu cầu của người dùng ###
-Gợi ý cho tôi vài bài nhạc pop
+<s>[INST] ### Example 3: No Data Provided ###
+### Provided Data ###
+(No data provided)
+### User Request ###
+Suggest some pop songs for me
 A: [/INST]
-Tôi cần dữ liệu về các bài hát để có thể đưa ra gợi ý chính xác.
+I need data about songs to provide an accurate suggestion.
 """
 
-        # Dữ liệu đầu vào hiện tại
         if context:
             context = context[:800] + "..." if len(context) > 800 else context
-            current_request = f"""### Dữ liệu Cung cấp ###
+            current_request = f"""### Provided Data ###
 {context}
 
-### Yêu cầu của người dùng ###
+### User Request ###
 {user_input}
 
 A: """
         else:
-            current_request = f"""### Dữ liệu Cung cấp ###
-(Không có dữ liệu nào được cung cấp)
+            current_request = f"""### Provided Data ###
+(No data provided)
 
-### Yêu cầu của người dùng ###
+### User Request ###
 {user_input}
 
 A: """
@@ -155,22 +143,10 @@ A: """
             f"{examples.strip()}\n</s>\n<s>[INST] {current_request.strip()} [/INST]"
         )
 
-    def generate_response(
-        self,
-        user_input: str,
-        context: str = None,
-        max_new_tokens=512,
-        temperature=0.7,
-        top_p=0.9,
-    ) -> str:
-        """
-        Sinh phản hồi từ mô hình dựa trên prompt đã xây dựng.
-        """
+    def generate_response(self, user_input: str, context: str = None, max_new_tokens=512, temperature=0.7, top_p=0.9) -> str:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-
-        prompt = self.build_prompt(user_input, context)
-
+        prompt = self.build_prompt_english(user_input, context)
         try:
             outputs = self.generator(
                 prompt,
